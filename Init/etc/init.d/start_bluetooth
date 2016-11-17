@@ -1,0 +1,6 @@
+#! /bin/sh
+if [ -f /usr/sbin/hciattach ]; then 
+	/bin/brcm_patchram_plus --timeout=6.00 --patchram /lib/firmware/brcm/bcm4329.hcd --baudrate 921600 --use_baudrate_for_download /dev/ttymxc2
+	/usr/sbin/hciattach /dev/ttymxc2 any 921600
+	/usr/sbin/hciconfig hci0 up
+fi

@@ -1,0 +1,13 @@
+#!/bin/sh
+
+rm -rf /tmp/.chromium
+mkdir /tmp/.chromium
+touch /tmp/.chromium/First\ Run
+
+export GOOGLE_API_KEY="no"
+export GOOGLE_DEFAULT_CLIENT_ID="no"
+export GOOGLE_DEFAULT_CLIENT_SECRET="no"
+
+export CHROME_DEVEL_SANDBOX=/usr/sbin/chrome-devel-sandbox
+export LD_LIBRARY_PATH=/usr/lib/chrome
+/usr/bin/chrome/chrome --use-gl=egl --gpu-no-context-lost --user-data-dir=/tmp/.chromium  $@

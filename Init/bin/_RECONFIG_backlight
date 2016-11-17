@@ -1,0 +1,12 @@
+#!/bin/sh
+
+case ${1} in
+	"0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" )
+		echo ${1} > /sys/class/backlight/backlight_lvds0.29/brightness
+		;;
+	*)
+		echo "usage: ${0} <backlight value> from 0 (off) to 7(max)"
+		;;
+esac
+
+

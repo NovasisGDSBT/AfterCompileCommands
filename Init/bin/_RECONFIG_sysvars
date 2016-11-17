@@ -1,0 +1,72 @@
+#!/bin/sh
+. /etc/sysconfig/system_vars
+
+SYSCONFIG_PARTITION="3"
+
+echo -n "Enter the Reference Server IP address (current IP [${REFERENCE_SERVER}]) : "
+read IP
+if [ "${IP}" != "" ]; then
+	REFERENCE_SERVER=`echo ${IP} | awk -F"." ' $0 ~ /^([0-9]{1,3}\.){3}[0-9]{1,3}$/ && $1 <=255 && $2 <= 255 && $3 <= 255 && $4 <= 255 '`
+fi
+if [ "${REFERENCE_SERVER}" == "" ]; then
+	echo "Invalid Reference Server IP address"
+	exit
+fi
+
+echo -n "Fast Boot Enable ( no splash )? Y/N [${FAST_BOOT_ENABLE}]) : "
+read FAST_BOOT_ENABLE
+
+echo -n "Password [${SYSTEM_PASSWORD}]) : "
+read SYSTEM_PASSWORD
+
+echo -n "Touch Enable ? Y/N [${TOUCH_ENABLE}]) : "
+read TOUCH_ENABLE
+
+EVTDEV=`echo ${TSLIB_TSDEVICE} | sed 's/\/dev\/input\/event//g'`
+echo -n "Touch Event Device ? [${EVTDEV}]) : "
+read EVTDEV
+
+echo "Summary :"
+echo "REFERENCE_SERVER=${REFERENCE_SERVER}"
+echo "FAST_BOOT_ENABLE=${FAST_BOOT_ENABLE}"
+echo "SYSTEM_PASSWORD=${SYSTEM_PASSWORD}"
+echo "TOUCH_ENABLE=${TOUCH_ENABLE}"
+echo "TSLIB_TSEVENTTYPE=INPUT"
+echo "STORED_TSLIB_CALIBFILE=/etc/sysconfig/pointercal"
+echo "TSLIB_CALIBFILE=/etc/pointercal"
+echo "TSLIB_TSDEVICE=/dev/input/event${EVTDEV}"
+echo "QWS_MOUSE_PROTO=\"Tslib:/dev/input/event${EVTDEV} auto\""
+echo "QWS_DISPLAY=LinuxFb:/dev/fb0"
+echo "SDL_MOUSEDRV=TSLIB"
+echo "SDL_MOUSEDEV=/dev/input/event${EVTDEV}"
+
+echo -n "Store new values in permantent storage ? [Y/n] : "
+read YN
+if [ "${YN}" != "Y" ]; then
+        echo "Changes not stored"
+        exit
+fi
+
+cd /tmp
+[ -d temp_mountpoint ] && rm -rf temp_mountpoint
+mkdir temp_mountpoint
+mount -t ext4 /dev/mmcblk0p${SYSCONFIG_PARTITION} temp_mountpoint
+if [ -d temp_mountpoint/sysconfig ]; then
+        echo "#Reference server, the server from wich do the updates" > temp_mountpoint/sysconfig/system_vars
+        echo "REFERENCE_SERVER=${REFERENCE_SERVER}" >> temp_mountpoint/sysconfig/system_vars
+        echo "FAST_BOOT_ENABLE=${FAST_BOOT_ENABLE}" >> temp_mountpoint/sysconfig/system_vars
+        echo "SYSTEM_PASSWORD=${SYSTEM_PASSWORD}" >> temp_mountpoint/sysconfig/system_vars
+        echo "TOUCH_ENABLE=${TOUCH_ENABLE}" >> temp_mountpoint/sysconfig/system_vars
+        echo "TSLIB_TSEVENTTYPE=INPUT" >> temp_mountpoint/sysconfig/system_vars
+        echo "STORED_TSLIB_CALIBFILE=/etc/sysconfig/pointercal" >> temp_mountpoint/sysconfig/system_vars
+        echo "TSLIB_CALIBFILE=/etc/pointercal" >> temp_mountpoint/sysconfig/system_vars
+        echo "TSLIB_TSDEVICE=/dev/input/event${EVTDEV}" >> temp_mountpoint/sysconfig/system_vars
+        echo "QWS_MOUSE_PROTO=\"Tslib:/dev/input/event${EVTDEV} auto\"" >> temp_mountpoint/sysconfig/system_vars
+        echo "QWS_DISPLAY=LinuxFb:/dev/fb0" >> temp_mountpoint/sysconfig/system_vars
+        echo "SDL_MOUSEDRV=TSLIB" >> temp_mountpoint/sysconfig/system_vars
+        echo "SDL_MOUSEDEV=/dev/input/event${EVTDEV}" >> temp_mountpoint/sysconfig/system_vars
+	cp temp_mountpoint/sysconfig/system_vars /etc/sysconfig/system_vars
+fi
+umount temp_mountpoint
+rm -rf temp_mountpoint
+

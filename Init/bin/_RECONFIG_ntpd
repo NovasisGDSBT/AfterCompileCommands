@@ -1,0 +1,37 @@
+#!/bin/sh
+SYSCONFIG_PARTITION="3"
+
+echo -n "Enter the ntp1 server address : "
+read NTP1
+echo -n "Enter the ntp2 server address : "
+read NTP2
+
+echo "Summary :"
+echo "ntp1 server : ${NTP1}"
+echo "ntp2 server : ${NTP2}"
+
+echo -n "Store new values in permantent storage ? [Y/n] : "
+read YN
+if [ "${YN}" != "Y" ]; then
+        echo "Changes not stored"
+        exit
+fi
+
+cd /tmp
+[ -d temp_mountpoint ] && rm -rf temp_mountpoint
+mkdir temp_mountpoint
+mount -t ext4 /dev/mmcblk0p${SYSCONFIG_PARTITION} temp_mountpoint
+if [ -d temp_mountpoint/sysconfig ]; then
+        echo "server ${NTP1} iburst" > /temp_mountpoint/sysconfig/ntp.conf
+        echo "server ${NTP2} iburst" >> /temp_mountpoint/sysconfig/ntp.conf
+        echo "restrict default kod nomodify notrap nopeer noquery" >> /temp_mountpoint/sysconfig/ntp.conf
+        echo "restrict -6 default kod nomodify notrap nopeer noquery" >> /temp_mountpoint/sysconfig/ntp.conf
+        echo "restrict 127.0.0.1" >> /temp_mountpoint/sysconfig/ntp.conf
+        echo "restrict -6 ::1" >> /temp_mountpoint/sysconfig/ntp.conf
+
+	cp temp_mountpoint/sysconfig/ntp.conf /etc/.
+	cp temp_mountpoint/sysconfig/ntp.conf /etc/sysconfig/.
+fi
+umount temp_mountpoint
+rm -rf temp_mountpoint
+

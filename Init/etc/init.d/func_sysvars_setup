@@ -1,0 +1,54 @@
+#!/bin/sh
+
+WHY_FILE="/tmp/why_defaults"
+UPDATE_PERMANENT_STORAGE="0"
+
+default_sysvars () {
+	rm -rf /mnt/sysconfig
+	mkdir /mnt/sysconfig
+	DIRS="etc"
+	for i in ${DIRS} ; do
+		cp -a /${i} /mnt/sysconfig/.
+	done
+	mkdir /mnt/sysconfig/root /mnt/sysconfig/bin /mnt/sysconfig/usr /mnt/sysconfig/var
+	cp /root/.profile /mnt/sysconfig/root/.
+	cp /root/.xinitrc /mnt/sysconfig/root/.
+}
+
+system_vars_setup () {
+	#Enable ethernet
+	echo 24 > /sys/class/gpio/export
+	echo out > /sys/class/gpio/gpio24/direction 
+	usleep 1000
+	echo 1 > /sys/class/gpio/gpio24/value 
+	#Enable ethernet END
+
+	mount /dev/mmcblk0p3 /mnt
+	if [ -d /mnt/sysconfig ]; then
+		DIRS="bin  etc  root  usr  var"
+		for i in ${DIRS} ; do
+			if [ -d /mnt/sysconfig/${i} ]; then
+				cp -a /mnt/sysconfig/${i} /
+			else
+				UPDATE_PERMANENT_STORAGE="1"
+				echo "No ${i} on permanent storage" >> ${WHY_FILE}
+			fi	
+		done
+	else
+		UPDATE_PERMANENT_STORAGE="1"
+		echo "No sysconfig on permanent storage" >> ${WHY_FILE}
+	fi
+
+	[ "${UPDATE_PERMANENT_STORAGE}" == "1" ] && default_sysvars
+
+	. /etc/sysconfig/system_vars
+	. /etc/sysconfig/network
+	. /etc/sysconfig/chromium_var
+
+	if [ -d /mnt/application_storage ]; then
+		cp -r /mnt/application_storage /tmp/.
+		chmod -R 777 /tmp/application_storage
+	fi
+	umount /mnt
+}
+

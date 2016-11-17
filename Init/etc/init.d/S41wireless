@@ -1,0 +1,7 @@
+#!/bin/sh
+#
+# Start the network....
+#
+if [ "${WLAN_ENABLED}" = "Y" ]; then
+	[ -f /etc/init.d/background_wlan0_network ] && /etc/init.d/background_wlan0_network $1 &
+fi

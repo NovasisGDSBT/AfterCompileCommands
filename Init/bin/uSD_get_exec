@@ -1,0 +1,13 @@
+#!/bin/sh
+if [ "${1}" == "" ]; then
+        echo "Usage `basename $0` <filename>"
+        exit 0
+fi
+. /etc/sysconfig/system_vars
+cd /mnt
+rm -f `basename ${1}`
+wget http://${REFERENCE_SERVER}/${1}
+RET_VAL=$?
+chmod 777 `basename ${1}`
+cd /tmp
+exit  $RET_VAL

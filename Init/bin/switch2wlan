@@ -1,0 +1,11 @@
+#!/bin/sh
+cat /etc/sysconfig/wireless | sed 's/WLAN_ENABLED=N/WLAN_ENABLED=Y/g' | sed 's/WLAN_USE_DHCP=N/WLAN_USE_DHCP=Y/g' > /tmp/wireless
+cat /etc/sysconfig/network | sed 's/ETH0_ENABLED=Y/ETH0_ENABLED=N/g' > /tmp/network
+rm -rf /tmp/tmpmount
+mkdir /tmp/tmpmount
+mount /dev/mmcblk0p3 /tmp/tmpmount
+cp /tmp/network /tmp/tmpmount/sysconfig/.
+cp /tmp/wireless /tmp/tmpmount/sysconfig/.
+umount /tmp/tmpmount
+echo "Parameters saved, now use _RECONFIG_network and _RECONFIG_wireless to setup your addresses"
+

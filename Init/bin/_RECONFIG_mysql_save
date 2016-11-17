@@ -1,0 +1,16 @@
+#!/bin/sh
+DATA_PARTITION="2"
+if [ ! -f /usr/bin/mysql ]; then
+	exit 0
+fi
+/etc/init.d/S97mysqld stop
+usleep 500000
+[ -d /tmp/temporary_mysql ] && rm -rf /tmp/temporary_mysql
+mkdir /tmp/temporary_mysql
+mount -t ext4 /dev/mmcblk0p${DATA_PARTITION} /tmp/temporary_mysql
+rm -rf /tmp/temporary_mysql/mysql
+cp -r /tmp/mysql /tmp/temporary_mysql/.
+umount /tmp/temporary_mysql
+rm -rf /tmp/temporary_mysql
+/etc/init.d/S97mysqld start
+

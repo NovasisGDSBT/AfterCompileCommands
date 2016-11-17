@@ -1,0 +1,28 @@
+#!/bin/sh
+. /etc/sysconfig/chromium_var
+SYSCONFIG_PARTITION="3"
+
+echo -n "Enter the Chromium Server address (currently [${CHROMIUM_SERVER}]) : "
+read CHROMIUM
+
+echo "Summary :"
+echo "CHROMIUM_SERVER=${CHROMIUM_SERVER}"
+
+echo -n "Store new values in permantent storage ? [Y/n] : "
+read YN
+if [ "${YN}" != "Y" ]; then
+        echo "Changes not stored"
+        exit
+fi
+
+cd /tmp
+[ -d temp_mountpoint ] && rm -rf temp_mountpoint
+mkdir temp_mountpoint
+mount -t ext4 /dev/mmcblk0p${SYSCONFIG_PARTITION} temp_mountpoint
+if [ -d temp_mountpoint/sysconfig ]; then
+        echo "CHROMIUM_SERVER=${CHROMIUM_SERVER}" > temp_mountpoint/sysconfig/chromium_var
+	cp temp_mountpoint/sysconfig/chromium_var /etc/sysconfig/chromium_var
+fi
+umount temp_mountpoint
+rm -rf temp_mountpoint
+

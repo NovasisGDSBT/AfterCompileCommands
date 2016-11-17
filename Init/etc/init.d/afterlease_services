@@ -1,0 +1,21 @@
+#!/bin/sh
+# called by usr/share/udhcpc/default.script after the dhcp have a valid ip
+
+. /etc/sysconfig/system_vars
+. /etc/sysconfig/network
+
+for i in /etc/init.d/afterlease_S??* ;do
+	[ ! -f "$i" ] && continue
+	$i start
+done
+
+ifconfig | grep Bcast | awk '{print $2}' | sed 's/addr://g' > /tmp/my_ip
+# Create the localhost interface
+ifconfig lo up
+echo 131072 > /proc/sys/kernel/msgmnb
+echo 3200 > /proc/sys/kernel/msgmni
+route add -net 239.0.0.0 netmask 255.0.0.0 dev eth0
+echo ${NET_HTTPD_PORT} > /tmp/httpdport
+
+touch /tmp/system_ready
+

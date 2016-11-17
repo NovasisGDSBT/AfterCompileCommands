@@ -1,0 +1,52 @@
+#!/bin/sh
+#
+# Start the network....
+#
+case "${1}" in
+  start)
+	if [ "${WLAN_ENABLED}" = "Y" ]; then
+		rm -f /tmp/my_ip
+		/sbin/insmod /lib/modules/brcmutil.ko 
+		/sbin/insmod /lib/modules/brcmfmac.ko
+		usleep 500000
+
+		if [ "${WLAN_USE_DHCP}" = "N" ]; then
+			# echo "# Generated from LAN" > /etc/resolv.conf
+			echo "search ${WLAN_SUFFIX}" > /etc/resolv.conf
+			echo "nameserver ${WLAN_DNS_LIST}" >> /etc/resolv.conf
+			ifconfig ${WLAN_DEVICE} ${WLAN_IP_ADDRESS} netmask ${WLAN_MASK} up >/dev/null 2>&1
+			route add default gw ${WLAN_GATEWAY} dev ${WLAN_DEVICE} >/dev/null 2>&1
+		else
+			ifconfig ${WLAN_DEVICE} up
+			usleep 100000
+			udhcpc -b -i ${WLAN_DEVICE} >/dev/null 2>&1
+			usleep 500000
+		fi
+		sleep 1
+		/usr/sbin/wpa_supplicant -Dwext -iwlan0 -c/etc/wpa_supplicant.conf &
+		WLAN_IP=0
+		while [ "${WLAN_IP}" == "0" ]; do
+			ifconfig | grep inet | grep Bcast
+			if [ "${?}" == "0" ]; then
+				WLAN_IP="1"
+			fi
+		done
+		ifconfig | grep inet | sed 's/Bcast/       /g' | cut -c21-36 > /tmp/my_ip
+	fi
+	;;
+  stop)
+	if [ "${WLAN_ENABLED}" = "Y" ]; then
+		ifconfig ${WLAN_DEVICE} down >/dev/null 2>&1
+	fi
+	;;
+  restart|reload)
+	"${0}" stop
+	"${0}" start
+	;;
+  *)
+	echo "Usage: ${0} {start|stop|restart}" >> /root/messages
+	exit 1
+	;;
+esac
+exit $?
+

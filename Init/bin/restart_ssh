@@ -1,0 +1,12 @@
+#!/bin/sh
+/etc/init.d/S50sshd stop
+rm -rf /etc/ssh /etc/ssl /tmp/tmpmount
+mkdir /etc/ssh /etc/ssl /tmp/tmpmount
+cp /etc/default_init/sshd_config /etc/ssh/.
+mount /dev/mmcblk0p3 /tmp/tmpmount
+rm -rf /tmp/tmpmount/sysconfig/ssh /tmp/tmpmount/sysconfig/ssl
+/etc/init.d/S50sshd start
+cp -r /etc/ssh /tmp/tmpmount/sysconfig/.
+cp -r /etc/ssl /tmp/tmpmount/sysconfig/.
+umount /tmp/tmpmount
+

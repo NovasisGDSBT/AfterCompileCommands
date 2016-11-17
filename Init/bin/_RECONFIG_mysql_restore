@@ -1,0 +1,18 @@
+#!/bin/sh
+DATA_PARTITION="2"
+[ ! -f /usr/bin/mysql ] && exit 0
+/etc/init.d/S97mysqld stop
+usleep 500000
+rm -rf /tmp/temporary_mysql
+mkdir /tmp/temporary_mysql
+mount -t ext4 /dev/mmcblk0p${DATA_PARTITION} /tmp/temporary_mysql
+if [ -d /tmp/temporary_mysql/mysql ]; then
+        cp -r /tmp/temporary_mysql/mysql /tmp
+        chown -R mysql /tmp/mysql
+fi
+umount /tmp/temporary_mysql
+rm -rf /tmp/temporary_mysql
+usleep 500000
+/etc/init.d/S97mysqld start
+
+

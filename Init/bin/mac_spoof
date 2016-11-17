@@ -1,0 +1,24 @@
+#!/bin/sh
+if [ "${1}" == "" ]; then
+	echo "Enter NEW mac ADDRESS [`cat /sys/class/net/eth0/address`] : "
+	read MAC
+else
+	MAC=${1}
+fi
+
+echo ${MAC} | grep -o -E '([[:xdigit:]]{1,2}:){5}[[:xdigit:]]{1,2}'
+if [ "${?}" == "1" ]; then
+	echo "MAC WRONG!!!"
+	exit
+fi
+NEWMAC=`echo $MAC | awk '{print toupper($MAC)}'`
+echo "New MAC will be ${NEWMAC}"
+rm -rf /mnt/tmpmount
+mkdir /mnt/tmpmount
+mount /dev/mmcblk0p1 /mnt/tmpmount
+cp /mnt/tmpmount/NOVAsom6.params /tmp
+cat /tmp/NOVAsom6.params | sed "s/setenv ethaddr .*$/setenv ethaddr ${NEWMAC}/g" > /tmp/NOVAsom6.params.new
+mv /mnt/tmpmount/NOVAsom6.params /mnt/tmpmount/NOVAsom6.params_OLD
+cp /tmp/NOVAsom6.params.new /mnt/tmpmount/NOVAsom6.params
+umount /mnt/tmpmount
+

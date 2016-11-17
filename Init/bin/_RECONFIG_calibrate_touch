@@ -1,0 +1,84 @@
+#!/bin/sh
+. /etc/sysconfig/system_vars
+
+SYSCONFIG_PARTITION="3"
+
+if [ "${1}" = "" ]; then
+	echo "usage: $0 event_number"
+	echo "Calibrate the touch screen and enable it"
+	echo "This script changes the xorg.conf file accordingly"
+	exit
+fi
+kill -9 `pidof fluxbox`
+sleep 1
+EVTDEV=${1}
+export TSLIB_TSDEVICE=/dev/input/event${EVTDEV}
+ts_calibrate
+
+echo "Section \"Device\"" > /tmp/xorg.conf
+echo "    Identifier  \"i.MX Accelerated Framebuffer Device\"" >> /tmp/xorg.conf
+echo "    Driver      \"fbdev\"" >> /tmp/xorg.conf
+echo "    Option      \"fbdev\"         \"/dev/fb0\"" >> /tmp/xorg.conf
+echo "    Option      \"vivante_fbdev\" \"/dev/fb0\"" >> /tmp/xorg.conf
+echo "    Option      \"HWcursor\"  \"false\"" >> /tmp/xorg.conf
+echo "EndSection" >> /tmp/xorg.conf
+
+echo "Section \"InputDevice\"" >> /tmp/xorg.conf
+echo "    Identifier \"tslib\"" >> /tmp/xorg.conf
+echo "    Driver \"tslib\"" >> /tmp/xorg.conf
+echo "    Option \"Device\"    \"/dev/input/event${EVTDEV}\"" >> /tmp/xorg.conf
+echo "    Option \"ScreenNumber\"  \"0\"" >> /tmp/xorg.conf
+echo "    Option \"Width\" \"0\"" >> /tmp/xorg.conf
+echo "    Option \"Height\"    \"0\"" >> /tmp/xorg.conf
+echo "    Option \"Rotate\"    \"NONE\"" >> /tmp/xorg.conf
+echo "    Option \"EmulateRightButton\"    \"1\"" >> /tmp/xorg.conf
+echo "EndSection" >> /tmp/xorg.conf
+
+echo "Section \"ServerLayout\"" >> /tmp/xorg.conf
+echo "     Identifier      \"Default Layout\"" >> /tmp/xorg.conf
+echo "     InputDevice     \"tslib\" \"CorePointer\"" >> /tmp/xorg.conf
+echo "EndSection" >> /tmp/xorg.conf
+
+echo "Section \"ServerFlags\"" >> /tmp/xorg.conf
+echo "    Option \"BlankTime\"  \"0\"" >> /tmp/xorg.conf
+echo "    Option \"StandbyTime\"  \"0\"" >> /tmp/xorg.conf
+echo "    Option \"SuspendTime\"  \"0\"" >> /tmp/xorg.conf
+echo "    Option \"OffTime\"  \"0\"" >> /tmp/xorg.conf
+echo "EndSection" >> /tmp/xorg.conf
+
+echo "Section \"Monitor\"" >> /tmp/xorg.conf
+echo "        Identifier \"Configured monitor\"" >> /tmp/xorg.conf
+echo "        HorizSync 30.0-62.0" >> /tmp/xorg.conf
+echo "        VertRefresh 25.0-75.0" >> /tmp/xorg.conf
+echo "EndSection" >> /tmp/xorg.conf
+
+echo "Section \"dri\"" >> /tmp/xorg.conf
+echo "        Mode 0666" >> /tmp/xorg.conf     
+echo "EndSection" >> /tmp/xorg.conf
+
+cd /tmp
+[ -d temp_mountpoint ] && rm -rf temp_mountpoint
+mkdir temp_mountpoint
+mount -t ext4 /dev/mmcblk0p${SYSCONFIG_PARTITION} temp_mountpoint
+echo "#Reference server, the server from wich do the updates" > temp_mountpoint/sysconfig/system_vars
+echo "REFERENCE_SERVER=${REFERENCE_SERVER}" >> temp_mountpoint/sysconfig/system_vars
+echo "FAST_BOOT_ENABLE=${FAST_BOOT_ENABLE}" >> temp_mountpoint/sysconfig/system_vars
+echo "SYSTEM_PASSWORD=${SYSTEM_PASSWORD}" >> temp_mountpoint/sysconfig/system_vars
+echo "TOUCH_ENABLE=Y" >> temp_mountpoint/sysconfig/system_vars
+echo "TSLIB_TSEVENTTYPE=INPUT" >> temp_mountpoint/sysconfig/system_vars
+echo "STORED_TSLIB_CALIBFILE=/etc/sysconfig/pointercal" >> temp_mountpoint/sysconfig/system_vars
+echo "TSLIB_CALIBFILE=/etc/pointercal" >> temp_mountpoint/sysconfig/system_vars
+echo "TSLIB_TSDEVICE=/dev/input/event${EVTDEV}" >> temp_mountpoint/sysconfig/system_vars
+echo "QWS_MOUSE_PROTO=\"Tslib:/dev/input/event${EVTDEV} auto\"" >> temp_mountpoint/sysconfig/system_vars
+echo "QWS_DISPLAY=LinuxFb:/dev/fb0" >> temp_mountpoint/sysconfig/system_vars
+echo "SDL_MOUSEDRV=TSLIB" >> temp_mountpoint/sysconfig/system_vars
+echo "SDL_MOUSEDEV=/dev/input/event${EVTDEV}" >> temp_mountpoint/sysconfig/system_vars
+cp /etc/pointercal temp_mountpoint/sysconfig/.
+cp /tmp/xorg.conf temp_mountpoint/sysconfig/.
+cp temp_mountpoint/sysconfig/system_vars /etc/sysconfig/system_vars
+cp temp_mountpoint/sysconfig/pointercal /etc/.
+cp /tmp/xorg.conf /etc/X11/xorg.conf
+umount temp_mountpoint
+rm -rf temp_mountpoint
+startx &
+
