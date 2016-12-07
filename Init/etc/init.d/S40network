@@ -18,6 +18,81 @@ if [ -f /etc/sysconfig/mac_addr ];  then
         . /etc/sysconfig/mac_addr
 fi
 
+GPIO_PORT1_BASE=0*32
+GPIO_PORT2_BASE=1*32
+GPIO_PORT3_BASE=2*32
+GPIO_PORT4_BASE=3*32
+GPIO_PORT5_BASE=4*32
+GPIO_PORT6_BASE=5*32
+# Inputs
+let CFG_BIT0=$GPIO_PORT5_BASE+20
+let CFG_BIT1=$GPIO_PORT1_BASE+2
+let CFG_BIT2=$GPIO_PORT3_BASE+28
+let CFG_BIT3=$GPIO_PORT3_BASE+30
+
+export_port()
+{       
+        echo $CFG_BIT0 > /sys/class/gpio/export
+        echo $CFG_BIT1 > /sys/class/gpio/export
+        echo $CFG_BIT2 > /sys/class/gpio/export
+        echo $CFG_BIT3 > /sys/class/gpio/export
+}
+
+unexport_port()
+{
+        echo $CFG_BIT0 > /sys/class/gpio/unexport
+        echo $CFG_BIT1 > /sys/class/gpio/unexport
+        echo $CFG_BIT2 > /sys/class/gpio/unexport
+        echo $CFG_BIT3 > /sys/class/gpio/unexport
+}
+
+# param $1 is the bit gpio number
+get_bit_level ()
+{
+        BIT_LEVEL=`cat /sys/class/gpio/gpio$1/value`
+}
+
+get_address ()
+{ 
+        SYS_ADDRESS="0"
+        get_bit_level $CFG_BIT0
+        [ "${BIT_LEVEL}" == "0" ] &&  SYS_ADDRESS="1"
+        get_bit_level $CFG_BIT1
+        [ "${BIT_LEVEL}" == "0" ] &&  SYS_ADDRESS="2"
+        get_bit_level $CFG_BIT2
+        [ "${BIT_LEVEL}" == "0" ] &&  SYS_ADDRESS="3"
+        get_bit_level $CFG_BIT3
+        [ "${BIT_LEVEL}" == "0" ] &&  SYS_ADDRESS="4"
+}
+
+export_port
+get_address
+echo "Address : $SYS_ADDRESS"
+unexport_port
+
+
+if [ ! -z "$NET_HOSTNAME" ];  then	
+        case "$SYS_ADDRESS" in
+                1)
+                        cat /etc/sysconfig/network |  sed 's/TFT.$/TFT1/g' > /etc/sysconfig/network_t
+                        ;;
+                2)
+                        cat /etc/sysconfig/network |  sed 's/TFT.$/TFT2/g' > /etc/sysconfig/network_t
+                        ;;
+                3)
+                        cat /etc/sysconfig/network |  sed 's/TFT.$/TFT3/g' > /etc/sysconfig/network_t
+                        ;;
+                4)
+                        cat /etc/sysconfig/network |  sed 's/TFT.$/TFT4/g' > /etc/sysconfig/network_t
+                        ;;
+        esac
+	cp /etc/sysconfig/network_t /etc/sysconfig/network
+	. /etc/sysconfig/network
+	echo "*****************************" >> /tmp/messages
+	echo "This tft is $NET_HOSTNAME !!!" >> /tmp/messages
+	echo "*****************************" >> /tmp/messages
+fi
+
 case "$1" in
   start)
  	echo "Starting network..."
