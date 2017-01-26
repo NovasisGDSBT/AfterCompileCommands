@@ -73,11 +73,11 @@ if [ -d /etc/X11/xinit/xinitrc.d ] ; then
 	unset f
 fi
 
-#twm &
-#xclock -geometry 50x50-1+1 &
-#xterm -geometry 80x50+494+51 &
-#xterm -geometry 80x20+494-0 &
-#exec xterm -geometry 80x66+0+0 -name login
-exec google-chrome http://www.novasom.info &
-#exec google-chrome http://192.168.10.39/asdf/Aventra.html &
+[ -f /etc/sysconfig/chromium_var ] && . /etc/sysconfig/chromium_var
+[ ! -f /etc/sysconfig/chromium_var ] &&  CHROMIUM_SERVER="www.google.com" 
+exec google-chrome -load-extension=/tmp/www/ChromeExtension --disk-cache-dir=/dev/null --disable-low-res-tiling --kiosk ${CHROMIUM_SERVER} &
+#exec google-chrome --disk-cache-dir=/dev/null --disable-low-res-tiling --kiosk ${CHROMIUM_SERVER} &
+exec /tmp/www/NovaCSC f /tmp/rgb_matrix &
+exec /tmp/www/chrome_keepalive.sh &
 exec fluxbox
+

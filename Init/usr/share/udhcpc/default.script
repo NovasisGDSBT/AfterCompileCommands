@@ -62,6 +62,15 @@ case "$1" in
 			echo "nameserver $i # $interface" >> $RESOLV_CONF
 		done
 		/etc/init.d/afterlease_services
+		pidof google-chrome
+		# This indicates a warm start of network 
+		if [ "$?" = "0" ]; then
+			pidof GDSBT_iptcom
+			if [ "$?" = "1" ]; then
+				kill -9 `pidof fluxbox`
+				/tmp/www/StartIptcomAfterLease &
+			fi
+		fi
 		;;
 esac
 
