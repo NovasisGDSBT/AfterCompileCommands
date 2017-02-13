@@ -100,7 +100,7 @@ case "$1" in
 		ifconfig ${NET_DEVICE} hw ether ${MAC_FROM_CMDLINE} up
 		
 		if [ ! -z "$NET_HOSTNAME" ];  then	
-		  udhcpc -i ${NET_DEVICE} -x hostname:$NET_HOSTNAME &
+		  udhcpc -i ${NET_DEVICE} -x hostname:$NET_HOSTNAME  -O 42 &
 		else
 		  udhcpc -i ${NET_DEVICE} &
 		fi

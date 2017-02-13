@@ -13,6 +13,7 @@ default_sysvars () {
 	mkdir /mnt/sysconfig/root /mnt/sysconfig/bin /mnt/sysconfig/usr /mnt/sysconfig/var
 	cp /root/.profile /mnt/sysconfig/root/.
 	cp /root/.xinitrc /mnt/sysconfig/root/.
+	cp -r /root/.fluxbox /mnt/sysconfig/root/.
 }
 
 system_vars_setup () {
@@ -25,7 +26,7 @@ system_vars_setup () {
 
 	mount /dev/mmcblk0p3 /mnt
 	if [ -d /mnt/sysconfig ]; then
-		DIRS="bin  etc  root  usr  var"
+		DIRS="bin  etc  root  root/.fluxbox usr  var"
 		for i in ${DIRS} ; do
 			if [ -d /mnt/sysconfig/${i} ]; then
 				cp -a /mnt/sysconfig/${i} /

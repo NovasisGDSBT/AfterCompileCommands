@@ -1,0 +1,2 @@
+#!/bin/sh
+/usr/bin/fbsetbg -f /root/.fluxbox/background.jpg
