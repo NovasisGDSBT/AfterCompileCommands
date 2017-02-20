@@ -10,6 +10,11 @@ for i in /etc/init.d/afterlease_S??* ;do
 done
 
 ifconfig | grep Bcast | awk '{print $2}' | sed 's/addr://g' > /tmp/my_ip
+
+MYIP=$(cat /tmp/my_ip)
+/tmp/www/logwrite.sh "APPA"  "INFO" "AutoRun.sh" "New IP received:" $MYIP
+
+
 # Create the localhost interface
 ifconfig lo up
 echo 131072 > /proc/sys/kernel/msgmnb
