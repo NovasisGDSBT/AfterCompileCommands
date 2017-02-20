@@ -21,4 +21,8 @@ cat /tmp/NOVAsom6.params | sed "s/setenv ethaddr .*$/setenv ethaddr ${NEWMAC}/g"
 mv /mnt/tmpmount/NOVAsom6.params /mnt/tmpmount/NOVAsom6.params_OLD
 cp /tmp/NOVAsom6.params.new /mnt/tmpmount/NOVAsom6.params
 umount /mnt/tmpmount
-
+sync
+echo "MAC_FROM_CMDLINE=${NEWMAC}" > /etc/sysconfig/mac_addr
+mount /dev/mmcblk0p3 /mnt/tmpmount
+cp /etc/sysconfig/mac_addr /mnt/tmpmount/sysconfig/etc/sysconfig/mac_addr
+umount /mnt/tmpmount

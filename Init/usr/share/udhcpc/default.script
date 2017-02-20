@@ -4,6 +4,7 @@
 
 [ -z "$1" ] && echo "Error: should be called from udhcpc" && exit 1
 
+NTPCONF="/etc/ntp.conf"
 RESOLV_CONF="/etc/resolv.conf"
 [ -e $RESOLV_CONF ] || touch $RESOLV_CONF
 [ -n "$broadcast" ] && BROADCAST="broadcast $broadcast"
@@ -61,6 +62,18 @@ case "$1" in
 			echo adding dns $i
 			echo "nameserver $i # $interface" >> $RESOLV_CONF
 		done
+		
+		rm -f $NTPCONF
+		for i in $ntpsrv ; do               
+                        echo adding ntpserver $i
+                        echo "server $i iburst" >> $NTPCONF
+                done
+                
+		echo "restrict default kod nomodify notrap nopeer noquery" >> $NTPCONF
+		echo "restrict -6 default kod nomodify notrap nopeer noquery" >> $NTPCONF
+		echo "restrict 127.0.0.1" >> $NTPCONF
+		echo "restrict -6 ::1" >> $NTPCONF
+		
 		/etc/init.d/afterlease_services
 		pidof google-chrome
 		# This indicates a warm start of network 

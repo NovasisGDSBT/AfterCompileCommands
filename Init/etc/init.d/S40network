@@ -15,7 +15,9 @@ for MACADDR in `cat /proc/cmdline` ; do
 done
 
 if [ -f /etc/sysconfig/mac_addr ];  then
-        . /etc/sysconfig/mac_addr
+    . /etc/sysconfig/mac_addr
+else
+    echo "MAC_FROM_CMDLINE=${MAC_FROM_CMDLINE}" > /etc/sysconfig/mac_addr
 fi
 
 GPIO_PORT1_BASE=0*32
@@ -100,7 +102,7 @@ case "$1" in
 		ifconfig ${NET_DEVICE} hw ether ${MAC_FROM_CMDLINE} up
 		
 		if [ ! -z "$NET_HOSTNAME" ];  then	
-		  udhcpc -i ${NET_DEVICE} -x hostname:$NET_HOSTNAME  -O 42 &
+		  udhcpc -i ${NET_DEVICE} -x hostname:$NET_HOSTNAME  &
 		else
 		  udhcpc -i ${NET_DEVICE} &
 		fi
